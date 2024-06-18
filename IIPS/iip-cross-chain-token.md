@@ -108,7 +108,7 @@ void transfer(Address _to, BigInteger _value, @Optional byte[] _data);
 /**
  * Returns the account balance of another account with string address {@code _owner},
  * which can be both ICON and NetworkAddress format.
- */
+*/
 @External(readonly = true)
 BigInteger xBalanceOf(String _owner);
 ```
@@ -132,7 +132,7 @@ BigInteger xBalanceOf(String _owner);
  * "<Network Id>.<Network System>/<Account Identifier>"
  * Examples:
  * "0x1.icon/hxc0007b426f8880f9afbab72fd8c7817f0d3fd5c0",
- * 0x5.moonbeam/0x5425F5d4ba2B7dcb277C369cCbCb5f0E7185FB41
+ * "0x5.moonbeam/0x5425F5d4ba2B7dcb277C369cCbCb5f0E7185FB41"
 */
 @External
 void hubTransfer(String _to, BigInteger _value, @Optional byte[] _data);
@@ -243,7 +243,7 @@ void crossTransfer(String _to, BigInteger _value, byte[] _data);
 ###### xCrossTransfer
 ```java
 /**
- * Method for processing cross chain transfers from spokes.
+ * Method for processing cross chain transfers from spokes. It is callable via XCall only.
  * 
  * @param _from from NetworkAddress
  * @param _to NetworkAddress to send to
@@ -259,7 +259,7 @@ void crossTransfer(String _to, BigInteger _value, byte[] _data);
 void xCrossTransfer(String from, String _from, String _to, BigInteger _value, byte[] _data);
 ```
 
-##### xCrossTransferRevert
+###### xCrossTransferRevert
 ```java
 /**
  * This method is callable via XCall only, and is called when the cross transfer transaction is reverted.
@@ -268,10 +268,10 @@ void xCrossTransfer(String from, String _from, String _to, BigInteger _value, by
 void xCrossTransferRevert(String from, String _to, BigInteger _value);
 ```
 
-##### xTransfer
+###### xTransfer
 ```java
 /**
- * Method for transferring hub balances to a spoke chain
+ * Method for transferring hub balances to a spoke chain. It is callable via XCall only.
  * 
  * @param from EOA address of a connected chain
  * @param _to native address on calling chain
