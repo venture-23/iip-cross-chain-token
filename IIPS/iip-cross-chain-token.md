@@ -1,8 +1,8 @@
 --- 
 iip: <to be assigned>
 title: Cross Chain Token Standard
-author: Sudeep Simkhada (sudeep.simkhada@ibriz.ai), Dan Brehmer (dan@venture23.io), Sudeep Bhandari (sudeep@ibriz.ai)
-discussions-to: <Discussion link>
+author: Sudeep Simkhada (sudeep.simkhada@venture23.io), Dan Brehmer (dan@venture23.io), Sudeep Bhandari (sudeep@venture23.io)
+discussions-to: https://github.com/icon-project/IIPs/discussions/74
 status: Draft
 type: Standards Track
 category: IRC
@@ -314,7 +314,7 @@ void xTokenFallback(String _from, BigInteger _value, byte[] _data);
 ```
 
 
-### References
+## References
 Existing code developed by the Balanced team.
 * [IRC2](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-2.md)
 
@@ -323,3 +323,8 @@ Existing code developed by the Balanced team.
 * [HubToken](https://github.com/balancednetwork/balanced-java-contracts/blob/1-balanced-on-havah/score-lib/src/main/java/network/balanced/score/lib/interfaces/tokens/HubToken.java)
 
 * [XTokenReceiver](https://github.com/balancednetwork/balanced-java-contracts/blob/1-balanced-on-havah/score-lib/src/main/java/network/balanced/score/lib/interfaces/tokens/XTokenReceiver.java)
+
+
+
+## Copyright
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
