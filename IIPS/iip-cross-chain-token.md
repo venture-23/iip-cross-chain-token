@@ -24,11 +24,11 @@ The ICON network's focus on cross-chain interoperability depends on creating low
 The cross chain token standard consists of two main libraries: HubToken and SpokeToken, and two extended libraries: IRC2 and XTokenReceiver. 
 1. [HubToken](#hubtoken)
 
-   HubToken is a token from the base chain. It controls token minting in the base chain. It also tracks the total supply of the token across all chains where the tokens are deployed. For example, bnUSD is a token that originates in the ICON chain through Balanced. So it is deployed as a hub token in the ICON  chain and, if we want to migrate bnUSD to other chains (say SUI chain), we will deploy it as a spoke token in SUI chain. Similarly, if we want to make any token from SUI, say PumpUp(PUP), a cross chain token then it is deployed as a hub token in SUI chain and as a spoke token in ICON chain.  HubToken contract extends the [SpokeToken](#spoketoken) contract.
+   HubToken is a token deployed on the ICON chain. It controls token minting/burning in the ICON chain. It also tracks the total supply of the token across all chains where the tokens are deployed. For example, bnUSD is a token that originates in the ICON chain through Balanced. So it is deployed as a hub token in the ICON chain and, if we want to migrate bnUSD to other chains (say SUI chain), we will deploy it as a spoke token in SUI chain. Similarly, if we want to make any token from SUI, say XYZ Token(XYZ), a cross chain token then it is deployed as a spoke token in the SUI chain and its corresponding Hub Token is deployed in the ICON chain. However, there are 3 different ways to implement the Cross Token Standard which is described in details in [Implementation](#implementation). HubToken contract extends the [SpokeToken](#spoketoken) contract. 
 
 2. [SpokeToken](#spoketoken)
 
-   SpokeToken is a token from a foreign chain. In ICON, it extends the basic [IRC2](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-2.md) token and has a cross chain transfer function and a function to get balance of a user across the chains. If we want to move a token from a base chain to some foreign chains, the token is deployed as a spoke token in all other foreign chains. For example, if we want to migrate SUI token to ICON, we will deploy a spoke token contract for SUI token in the ICON chain.
+   SpokeToken is a token on foreign chain. In ICON, it extends the basic [IRC2](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-2.md) token and has a cross chain transfer function and a function to get balance of a user across the chains. If we want to make a token (from chains other than ICON) a cross chain token, then the token is deployed as a spoke token in its base chains and all other foreign chains except ICON where its Hub Token is deployed. For example, if we want to migrate SUI token to ICON, we will deploy a spoke token contract for SUI token in SUI chain and its Hub Token on ICON chain. Likewise, there are 3 different ways to implement Cross Token Standard for Spoken Tokens as well.
 
 3. [IRC2](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-2.md)
    
@@ -40,7 +40,7 @@ The cross chain token standard consists of two main libraries: HubToken and Spok
    
    It extends the TokenFallback method of ICON. The function [xTokenFallback](#xtokenfallback) is only callable via XCall services on ICON. It is called when transfer is called from the foreign chain and the receiving address is a contract in ICON. The receiving contract must have implemented `xTokenFallback` in order to get a successful transfer of tokens.
 
-So, for a token to be a cross chain token, it needs to implement the cross chain token standard in their respective chain. A token is deployed as a HubToken in its base chain and as a SpokeToken in other foreign chains.
+So, for a token to be a cross chain token, it needs to implement the cross chain token standard in their respective chain. A token is deployed as a HubToken in the ICON chain and as a SpokeToken in its base and all other foreign chains except the ICON chain.
 
 ### SpokeToken
 SpokeToken contract extends the basic token standard of the respective chains. In ICON, it extends basic IRC2 token and has a cross chain transfer function.
@@ -183,7 +183,7 @@ void HubTransfer(String _from, String _to, BigInteger _value, byte[] _data);
 ```
 
 ### HubToken
-HubToken contract extends the [SpokeToken](#spoketoken) interface. It controls token minting and includes a function to track total supply across all connected chains.
+HubToken contract extends the [SpokeToken](#spoketoken) interface. It controls token minting/burning and includes a function to track total supply across all connected chains.
 
 #### Methods
 
@@ -313,6 +313,33 @@ This contract is to handle the cross chain token transfer to the contracts in th
 void xTokenFallback(String _from, BigInteger _value, byte[] _data);
 ```
 
+## Implementation
+The motivation of Cross Token Standard is to enable interoperability across multiple chains connected via ICON's GMP. This created 3 different scenarios for its implementation. First, a new cross chain token can be directly deployed extending the Hub Token Implementation on ICON and Spoke Token Implementaion in any other foreign chains. Second, If there already exists a token in any chains, it can be upgraded to cross chain token by extending the respective token standard and upgrading the smart contract. And the third, If there already exists a token in any chains, it can be upgraded to a cross chain token by deploying a Spoke Token manager contract. In this case, token deployer don't have to upgrade their smart contract.
+
+The implementation of the above 3 scenarios are listed below:
+1. Deploy New Cross Chain Token 
+   If a user wants to deploy a fresh new cross chain token, he/she can just extend the Hub/Spoke Token Standard Implementation library based on their requirement. If the chain is ICON, Hub Token is supposed to be deployed and if it is any other foreign chains then Spoke Token is supposed to be deployed. This way of implementation helps to deploy a native token in any other foreign chains. For example, if a token issuer wants to issue a new cross chain token on ICON, he/she will extend the HubToken Implementation library (and add some custom functionality if necessary) into the token contract and deploy it on ICON, and deploy a SpokeToken Implementaion contract on all other foreign chains.
+
+   * [Hub Token Implementaion on ICON](https://github.com/venture-23/icon-token-standard/blob/development/java-contracts/CrossChainToken/src/main/java/icon/cross/chain/token/lib/tokens/HubTokenImpl.java)
+
+   Example for deploying a new cross chain token on:
+      * [ICON](https://github.com/venture-23/icon-token-standard/blob/development/java-contracts/token-examples/NewCrossTokenDeploy/src/main/java/icon/cross/chain/token/examples/NewCrossTokenImpl.java)
+      * [SUI](https://github.com/venture-23/icon-token-standard/blob/development/sui-move-contracts/spoke_token/sources/impl/new_cross_token.move)
+      * [EVM](https://github.com/venture-23/icon-token-standard/blob/development/solidity-contracts/icon-cross-chain-token/src/implementation/NewCrossToken.sol)
+
+2. Upgrade Existing Token to Cross Chain Token
+   If a token issuer wants to upgrade the already existing token to a cross chain token then he/she can upgrade their existing token contract by extending the Cross Token Standard library based on token type if it is ICON extend Hub Token, if any other foreign chains extend Spoke Token. This way of implementation helps to deploy a native token in any other foreign chains. For example, if there exists a token ABC on SUI chain and the issuer wants to upgrade it to cross chain standard then, the issuer will upgrade the ABC token by extending the Spoke Token library on SUI.
+
+   * [Spoke Token Implementation on SUI](https://github.com/venture-23/icon-token-standard/blob/development/sui-move-contracts/spoke_token/sources/spoke_token.move)
+
+   * [Spoke Token Implementation on EVM](https://github.com/venture-23/icon-token-standard/blob/development/solidity-contracts/icon-cross-chain-token/src/tokens/SpokeToken.sol)
+
+3. Deploy Spoke Manager for Existing Token
+   If a token issuer wants to upgrade the already existing token to a cross chain token then he/she can do so without upgrading their existing token contract. The token issue can deploy a Spoke Token Manager in order to lock their cross transferred token and release it on withdrawal of the token. This way of implementation will deploy a wrapped version of the token in any other foreign chains. For example, if there exists a XYZ token on EVM chain and the issuer wants to upgrade it to cross token standard then, the issuer will deploy a Spoke Token Manager on EVM chain. The cross transfer function is called from the manager contract which locks the XYZ token and the token is minted through Spoke Token on the destination chain. And if the XYZ token is withdrawn back to native chain, the manager contract releases the fund to destination address.
+
+   * [Spoke Manager Implementation on SUI](https://github.com/venture-23/icon-token-standard/blob/development/sui-move-contracts/spoke_token/sources/spoke_manager.move)
+   * [Spoke Manager Implemantation on EVM](https://github.com/venture-23/icon-token-standard/blob/development/solidity-contracts/icon-cross-chain-token/src/tokens/SpokeTokenManager.sol)
+   
 
 ## References
 Existing code developed by the Balanced team.
