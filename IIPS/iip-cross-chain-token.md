@@ -77,7 +77,7 @@ public BigInteger decimals();
 ##### totalSupply
 ```java
 /**
- * Returns the total token supply.
+ * Returns the total supply on the chain to which the spoke token is deployed.
 */
 @External(readonly=true)
 public BigInteger totalSupply();
@@ -95,7 +95,13 @@ public BigInteger balanceOf(Address _owner);
 ##### transfer
 ```java
 /**
- * Transfer tokens from one address to another and MUST fire the {@code Transfer} event.
+ * Transfer tokens from the originating address to the `_to` address.
+ * MUST fire the {@code Transfer} event.
+ * SHOULD throw if the originating account balance is less than `_value`.
+ * If `_to` is a contract, this function MUST invoke the function `tokenFallback(Address, int, bytes)` in `_to`.
+ * If the tokenFallback function is not implemented in `_to` (receiver contract), then the transaction must fail and the transfer of tokens should not occur.
+ * If `_to` is an externally owned address, then the transaction must be sent without trying to execute `tokenFallback` in `_to`.
+ * `_data` can be attached to this token transaction. `_data` can be empty.
  * 
  * @param _to token receiver address 
  * @param _value amount to send
@@ -108,8 +114,8 @@ void transfer(Address _to, BigInteger _value, @Optional byte[] _data);
 ##### xBalanceOf
 ```java
 /**
- * Returns the account balance of another account with string address {@code _owner},
- * which can be both ICON and NetworkAddress format.
+ * Returns the account balance of another account with string address {@code _owner}.
+ * This function MUST support both ICON and NetworkAddress formats.
 */
 @External(readonly = true)
 BigInteger xBalanceOf(String _owner);
@@ -118,7 +124,7 @@ BigInteger xBalanceOf(String _owner);
 ##### hubTransfer
 ```java
 /**
- * Method to transfer spoke token.
+ * Method to transfer a spoke token.
  * 
  * @param _to receiver address in string format
  * @param _value amount to send
@@ -126,11 +132,12 @@ BigInteger xBalanceOf(String _owner);
 */
 
 /** 
- * If {@code _to} is a ICON address, use IRC2 transfer
- * Transfers {@code _value} amount of tokens to NetworkAddress {@code _to}, and MUST fire the {@code HubTransfer} event.
+ * {@code _to} MUST support both ICON and NetworkAddress formats.
+ * If {@code _to} is an ICON address, use IRC2 transfer.
+ * If {@code _to} is a NetworkAddress, transfer {@code _value} amount of tokens to {@code _to}, and MUST fire the {@code HubTransfer} event.
  * This function SHOULD throw if the caller account balance does not have enough tokens to spend.
  * 
- * The format of {@code _to} if it is NetworkAddress:
+ * {@code _to} NetworkAddresses MUST have the following format:
  * "<Network Id>.<Network System>/<Account Identifier>"
  * Examples:
  * "0x1.icon/hxc0007b426f8880f9afbab72fd8c7817f0d3fd5c0",
